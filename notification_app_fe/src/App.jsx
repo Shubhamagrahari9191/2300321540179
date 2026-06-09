@@ -1,30 +1,38 @@
+import { useEffect, useState } from "react";
 import NotificationList from "./NotificationList";
-import { notifications } from "./data";
 
 function App() {
-  const weights = {
-    placement: 3,
-    result: 2,
-    event: 1,
-  };
+  const [notifications, setNotifications] = useState([]);
+  const [filter, setFilter] = useState("All");
 
-  const topNotifications = notifications
-    .filter((n) => n.unread)
-    .sort((a, b) => {
-      const scoreA =
-        weights[a.type] * 1000000 + new Date(a.timestamp).getTime();
-
-      const scoreB =
-        weights[b.type] * 1000000 + new Date(b.timestamp).getTime();
-
-      return scoreB - scoreA;
+  useEffect(() => {
+    fetch("http://4.224.186.213/evaluation-service/notifications", {
+      headers: {
+        Authorization: `Bearer YOUR_TOKEN`
+      }
     })
-    .slice(0, 10);
+      .then((res) => res.json())
+      .then((data) => setNotifications(data.notifications))
+      .catch((err) => console.log(err));
+  }, []);
+
+  const filteredNotifications =
+    filter === "All"
+      ? notifications
+      : notifications.filter((n) => n.Type === filter);
 
   return (
     <div>
       <h1>Notification Dashboard</h1>
-      <NotificationList notifications={topNotifications} />
+
+      <div className="filters">
+        <button onClick={() => setFilter("All")}>All</button>
+        <button onClick={() => setFilter("Placement")}>Placement</button>
+        <button onClick={() => setFilter("Result")}>Result</button>
+        <button onClick={() => setFilter("Event")}>Event</button>
+      </div>
+
+      <NotificationList notifications={filteredNotifications} />
     </div>
   );
 }
